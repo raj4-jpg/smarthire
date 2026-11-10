@@ -1,6 +1,5 @@
 import os
 import re
-import io
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -14,48 +13,112 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Page configuration
+# Set Wide Page Configuration
 st.set_page_config(
-    page_title="SmartHire AI - Advanced Career Engine",
-    page_icon="⚡",
+    page_title="SmartHire AI - Career Matching Engine",
+    page_icon="🌸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom Styling for modern corporate UI
+# =========================================================
+# 1. LUXURY CREAM & BLUSH PINK DESIGN SYSTEM (CSS)
+# =========================================================
 st.markdown("""
 <style>
-    .metric-card {
-        background-color: #1E2229;
-        border-radius: 10px;
-        padding: 16px;
-        border: 1px solid #30363D;
+    /* Global Background: Warm Cream */
+    .stApp {
+        background-color: #FAF6F0;
+        color: #2D2424;
+        font-family: 'Inter', -apple-system, sans-serif;
     }
-    .skill-badge-found {
-        background-color: #1B4D3E;
-        color: #A3E635;
-        padding: 4px 10px;
-        border-radius: 15px;
-        font-size: 0.85rem;
-        display: inline-block;
-        margin: 3px;
-        font-weight: 500;
+    
+    /* Top Header Banner */
+    .main-header {
+        background: linear-gradient(135deg, #FFE4E8 0%, #FFD1DC 50%, #FFF3EE 100%);
+        border: 1px solid #FBCFE8;
+        padding: 26px 32px;
+        border-radius: 18px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 15px rgba(244, 114, 182, 0.08);
     }
-    .skill-badge-missing {
-        background-color: #4C1D24;
-        color: #F87171;
-        padding: 4px 10px;
-        border-radius: 15px;
+    .main-header h1 {
+        color: #881337;
+        margin: 0;
+        font-weight: 700;
+        font-size: 2.2rem;
+    }
+    .main-header p {
+        color: #9F1239;
+        margin-top: 6px;
+        font-size: 1.05rem;
+    }
+
+    /* Metric & Information Cards */
+    div[data-testid="stMetric"] {
+        background-color: #FFFDF9;
+        border: 1px solid #FCE7F3;
+        border-radius: 14px;
+        padding: 16px 20px;
+        box-shadow: 0 2px 8px rgba(244, 63, 94, 0.04);
+    }
+    div[data-testid="stMetricLabel"] {
+        color: #9F1239 !important;
+        font-weight: 600;
+    }
+    div[data-testid="stMetricValue"] {
+        color: #4C0519 !important;
+        font-weight: 800;
+    }
+
+    /* Skill Badges */
+    .badge-matched {
+        background-color: #FCE7F3;
+        color: #9D174D;
+        border: 1px solid #F472B6;
+        padding: 5px 12px;
+        border-radius: 16px;
         font-size: 0.85rem;
+        font-weight: 600;
         display: inline-block;
-        margin: 3px;
-        font-weight: 500;
+        margin: 4px;
+    }
+    .badge-missing {
+        background-color: #FFF1F2;
+        color: #BE123C;
+        border: 1px dashed #FB7185;
+        padding: 5px 12px;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+        margin: 4px;
+    }
+
+    /* Expander Container Styling */
+    .streamlit-expanderHeader {
+        background-color: #FFFDF9 !important;
+        border-radius: 12px !important;
+        color: #881337 !important;
+        font-weight: 600 !important;
+    }
+
+    /* Sidebar Background */
+    section[data-testid="stSidebar"] {
+        background-color: #FFF9F3;
+        border-right: 1px solid #FCE7F3;
+    }
+
+    /* Tab Selected Styling */
+    button[data-baseweb="tab"] {
+        color: #881337 !important;
+        font-weight: 600;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 1. PREPROCESSING & PARSING MODULE
+# 2. TEXT PROCESSING & FILE EXTRACTOR
 # =========================================================
 def clean_text(text: str) -> str:
     """Sanitizes text by stripping links, handles, special characters, and extra spaces."""
@@ -69,7 +132,7 @@ def clean_text(text: str) -> str:
     return text.lower()
 
 def extract_text_from_upload(uploaded_file) -> str:
-    """Extracts text stream from PDF, DOCX, or plain text formats."""
+    """Extracts plain text stream from PDF, DOCX, or plain text formats."""
     fname = uploaded_file.name.lower()
     if fname.endswith(".txt"):
         return uploaded_file.read().decode("utf-8", errors="ignore")
@@ -79,7 +142,7 @@ def extract_text_from_upload(uploaded_file) -> str:
             reader = PdfReader(uploaded_file)
             return "\n".join([page.extract_text() for page in reader.pages if page.extract_text()])
         except Exception as e:
-            st.error(f"Error parsing PDF: {e}")
+            st.error(f"Error reading PDF: {e}")
             return ""
     elif fname.endswith(".docx"):
         try:
@@ -87,29 +150,29 @@ def extract_text_from_upload(uploaded_file) -> str:
             doc = docx.Document(uploaded_file)
             return "\n".join([p.text for p in doc.paragraphs])
         except Exception as e:
-            st.error(f"Error parsing DOCX: {e}")
+            st.error(f"Error reading DOCX: {e}")
             return ""
     return ""
 
 # =========================================================
-# 2. ADVANCED DATASET, MODELS & CLUSTERING INITIALIZATION
+# 3. LEXICON, MODELS & UNIFIED JOB CORPUS
 # =========================================================
-TECHNICAL_LEXICON = [
-    "python", "r", "sql", "machine learning", "deep learning", "nlp", "tensorflow", "pytorch",
-    "scikit-learn", "pandas", "numpy", "tableau", "powerbi", "docker", "kubernetes", "aws",
-    "azure", "gcp", "jenkins", "terraform", "ci/cd", "linux", "ansible", "java", "spring boot",
-    "microservices", "hibernate", "kafka", "mysql", "postgresql", "mongodb", "html", "css",
-    "javascript", "typescript", "react", "next.js", "figma", "ui/ux", "solidworks", "catia",
-    "autocad", "ansys", "fea", "thermodynamics", "gd&t", "recruitment", "talent acquisition",
-    "hris", "payroll", "supply chain", "logistics", "six sigma", "operations management",
-    "cybersecurity", "penetration testing", "siem", "firewall", "flutter", "swift", "kotlin"
-]
+SKILL_DIMENSIONS = {
+    "Programming": ["python", "r", "java", "javascript", "typescript", "c++", "sql"],
+    "Machine Learning": ["machine learning", "deep learning", "nlp", "tensorflow", "pytorch", "scikit-learn", "statistics"],
+    "Data Engineering": ["pandas", "numpy", "kafka", "mysql", "postgresql", "mongodb", "etl"],
+    "Cloud & DevOps": ["docker", "kubernetes", "aws", "azure", "jenkins", "terraform", "ci/cd", "linux"],
+    "Frontend & Design": ["react", "html", "css", "figma", "ui/ux", "wireframing", "tailwind"],
+    "Mechanical & Systems": ["solidworks", "catia", "autocad", "fea", "ansys", "thermodynamics", "gd&t"]
+}
+
+FLAT_LEXICON = [skill for skills in SKILL_DIMENSIONS.values() for skill in skills]
 
 @st.cache_resource
 def build_engine():
     # 1. Supervised Training Data for Category Classifier (Model A)
     labeled_corpus = [
-        ("Data Science", "Data Scientist proficient in Python, machine learning, deep learning, NLP, TensorFlow, Scikit-Learn, Pandas, SQL, Tableau, data visualization, predictive modeling."),
+        ("Data Science", "Data Scientist skilled in Python, machine learning, deep learning, NLP, TensorFlow, Scikit-Learn, Pandas, SQL, Tableau, data visualization, predictive modeling."),
         ("Data Science", "Machine Learning Specialist skilled in PyTorch, algorithms, predictive analytics, statistics, data pipelines, big data, MLOps, classification, regression."),
         ("Java Developer", "Senior Java Developer skilled in Java 17, Spring Boot, Microservices, Hibernate, REST APIs, PostgreSQL, Kafka, multithreading, Docker, Maven."),
         ("Java Developer", "Backend Software Engineer experienced with Core Java, J2EE, Spring Cloud, relational databases, unit testing, JUnit, CI/CD, Kubernetes."),
@@ -120,9 +183,7 @@ def build_engine():
         ("Mechanical Engineer", "Mechanical Design Engineer with expertise in CAD, SolidWorks, CATIA, AutoCAD, finite element analysis (FEA), ANSYS, GD&T, 3D modeling, thermodynamics."),
         ("Mechanical Engineer", "Thermal & Simulation Engineer proficient in SolidWorks, heat transfer, prototype stress analysis, fluid mechanics, CNC manufacturing."),
         ("HR", "Human Resources Specialist experienced in talent acquisition, recruitment lifecycle, employee relations, onboarding, HR policies, HRIS, payroll."),
-        ("Operations Manager", "Operations & Supply Chain Manager experienced in logistics, Lean Six Sigma, process improvement, vendor management, ERP systems, KPI monitoring."),
-        ("Cybersecurity", "Information Security Analyst proficient in cybersecurity, penetration testing, SIEM, network defense, firewalls, vulnerability assessment, Linux, incident response."),
-        ("Mobile Developer", "Mobile App Developer skilled in Flutter, Swift, Kotlin, iOS and Android architecture, REST API integration, state management, mobile UI design.")
+        ("Operations Manager", "Operations & Supply Chain Manager experienced in logistics, Lean Six Sigma, process improvement, vendor management, ERP systems, KPI monitoring.")
     ]
     
     df_train = pd.DataFrame(labeled_corpus, columns=["Category", "Text"])
@@ -133,46 +194,40 @@ def build_engine():
     classifier = LogisticRegression(max_iter=1000, C=2.0)
     classifier.fit(X_train, df_train["Category"])
     
-    # 2. Comprehensive Merged Job Corpus
+    # 2. Unified Job Corpus with Salary Bands
     jobs_data = [
-        {"id": 1, "title": "Senior Data Scientist", "company": "Kaggle Labs", "location": "Bengaluru", "exp": "2-5 yrs", "skills": "Python, Machine Learning, Scikit-Learn, Deep Learning, SQL, NLP, Tableau", "desc": "Design end-to-end predictive pipelines, train classification models, and communicate insights to leadership.", "domain": "Data Science"},
-        {"id": 2, "title": "MLOps & AI Engineer", "company": "NeuralScale Systems", "location": "Hyderabad", "exp": "3-6 yrs", "skills": "Python, PyTorch, Docker, Kubernetes, MLOps, AWS, CI/CD", "desc": "Containerize, deploy, and scale deep learning algorithms in production with automated pipelines.", "domain": "Data Science"},
-        {"id": 3, "title": "Java Microservices Lead", "company": "Enterprise FinTech", "location": "Pune", "exp": "3-6 yrs", "skills": "Java, Spring Boot, Microservices, Kafka, PostgreSQL, Docker, Hibernate", "desc": "Architect resilient transactional microservices supporting high concurrency and low latency operations.", "domain": "Java Developer"},
-        {"id": 4, "title": "Fullstack Java Engineer", "company": "CloudPlatform Inc", "location": "Bengaluru", "exp": "1-3 yrs", "skills": "Java, Spring Boot, React, MySQL, REST APIs, Git", "desc": "Develop and maintain robust web backends and integrate with responsive web frontends.", "domain": "Java Developer"},
-        {"id": 5, "title": "UI/UX & Web Designer", "company": "Studio Pixelcraft", "location": "Remote", "exp": "1-4 yrs", "skills": "Figma, HTML, CSS, JavaScript, React, UI/UX, Wireframing", "desc": "Produce intuitive user flows, maintain scalable component libraries, and build interactive client interfaces.", "domain": "Web Designing"},
-        {"id": 6, "title": "Cloud DevOps Engineer", "company": "InnoCloud Tech", "location": "Hyderabad", "exp": "2-5 yrs", "skills": "AWS, Docker, Kubernetes, Terraform, Jenkins, Linux, CI/CD", "desc": "Automate multi-region cloud infrastructures using Infrastructure as Code (IaC) and maintain CI/CD pipelines.", "domain": "DevOps Engineer"},
-        {"id": 7, "title": "CAD Mechanical Design Specialist", "company": "Apex Mobility Ltd", "location": "Chennai", "exp": "2-4 yrs", "skills": "SolidWorks, AutoCAD, FEA, ANSYS, GD&T, CAD, Thermodynamics", "desc": "Engineer structural chassis elements, evaluate thermal and structural stresses, and build prototyping blueprints.", "domain": "Mechanical Engineer"},
-        {"id": 8, "title": "Talent Acquisition Partner", "company": "PeopleEdge HR", "location": "Mumbai", "exp": "1-4 yrs", "skills": "Recruitment, Sourcing, Talent Acquisition, Screening, HRIS, Onboarding", "desc": "Lead full lifecycle technical recruiting, build candidate pipelines, and coordinate hiring initiatives.", "domain": "HR"},
-        {"id": 9, "title": "Supply Chain Operations Lead", "company": "SwiftCargo Global", "location": "Delhi NCR", "exp": "3-7 yrs", "skills": "Operations Management, Supply Chain, Logistics, Six Sigma, ERP", "desc": "Optimize warehouse inventory turnover, reduce fulfillment turnaround, and enforce Six Sigma standards.", "domain": "Operations Manager"},
-        {"id": 10, "title": "Cybersecurity & Threat Analyst", "company": "CyberShield Defense", "location": "Bengaluru", "exp": "2-5 yrs", "skills": "Cybersecurity, Penetration Testing, Linux, SIEM, Firewalls, Python", "desc": "Monitor network perimeters, execute vulnerability audits, and remediate intrusion vectors.", "domain": "Cybersecurity"}
+        {"id": 1, "title": "Lead Data Scientist", "company": "Kaggle Labs", "location": "Bengaluru", "exp": "3-5 yrs", "skills": "Python, Machine Learning, Scikit-Learn, Deep Learning, SQL, NLP", "desc": "Train and validate machine learning architectures, statistical hypothesis testing, and business impact modeling.", "domain": "Data Science", "base_salary": "₹16 - 24 LPA"},
+        {"id": 2, "title": "AI & MLOps Specialist", "company": "NeuralScale Systems", "location": "Hyderabad", "exp": "2-4 yrs", "skills": "Python, PyTorch, Docker, Kubernetes, AWS, CI/CD, Linux", "desc": "Design automated model monitoring systems, scale inference pipelines, and manage cloud endpoints.", "domain": "Data Science", "base_salary": "₹14 - 20 LPA"},
+        {"id": 3, "title": "Senior Java Architect", "company": "FinTech Core", "location": "Pune", "exp": "4-7 yrs", "skills": "Java, Spring Boot, Microservices, Kafka, PostgreSQL, Docker, Hibernate", "desc": "Architect high-throughput transactional backends and lead enterprise integration.", "domain": "Java Developer", "base_salary": "₹18 - 26 LPA"},
+        {"id": 4, "title": "Fullstack Web Designer", "company": "Studio Pixelcraft", "location": "Remote", "exp": "1-3 yrs", "skills": "Figma, HTML, CSS, JavaScript, React, UI/UX, Wireframing", "desc": "Craft component design systems, build interactive responsive web prototypes, and test usability.", "domain": "Web Designing", "base_salary": "₹7 - 12 LPA"},
+        {"id": 5, "title": "Cloud DevOps Engineer", "company": "InnoCloud Tech", "location": "Hyderabad", "exp": "2-5 yrs", "skills": "AWS, Docker, Kubernetes, Terraform, Jenkins, Linux, CI/CD", "desc": "Maintain containerized infrastructures, automate staging deployments, and oversee zero-downtime releases.", "domain": "DevOps Engineer", "base_salary": "₹12 - 18 LPA"},
+        {"id": 6, "title": "CAD Mechanical Design Engineer", "company": "Apex Mobility Ltd", "location": "Chennai", "exp": "2-4 yrs", "skills": "SolidWorks, AutoCAD, FEA, ANSYS, GD&T, CAD, Thermodynamics", "desc": "Perform thermal analysis, model mechanical enclosures in SolidWorks, and coordinate manufacturing tolerancing.", "domain": "Mechanical Engineer", "base_salary": "₹8 - 14 LPA"},
+        {"id": 7, "title": "Technical Sourcing Specialist", "company": "PeopleEdge HR", "location": "Mumbai", "exp": "1-3 yrs", "skills": "Recruitment, Sourcing, Talent Acquisition, Screening, HRIS", "desc": "Manage end-to-end recruitment funnels, pipeline top software engineers, and conduct interviews.", "domain": "HR", "base_salary": "₹6 - 10 LPA"},
+        {"id": 8, "title": "Operations & Logistics Manager", "company": "SwiftCargo Global", "location": "Delhi NCR", "exp": "3-6 yrs", "skills": "Operations Management, Supply Chain, Logistics, Six Sigma", "desc": "Streamline warehouse delivery throughput, manage partner SLAs, and optimize operational margins.", "domain": "Operations Manager", "base_salary": "₹11 - 17 LPA"}
     ]
     df_corpus = pd.DataFrame(jobs_data)
     df_corpus["clean_text"] = (df_corpus["title"] + " " + df_corpus["skills"] + " " + df_corpus["desc"]).apply(clean_text)
     
-    # 3. TF-IDF & K-Means Unsupervised Clustering
+    # 3. Vectorization & K-Means Unsupervised Clustering
     vec_rec = TfidfVectorizer(stop_words="english", ngram_range=(1, 2))
     corpus_vectors = vec_rec.fit_transform(df_corpus["clean_text"])
     
-    n_clusters = 5
-    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
     df_corpus["cluster"] = kmeans.fit_predict(corpus_vectors)
     
-    # PCA 2D coordinates for visual mapping
     pca = PCA(n_components=2, random_state=42)
     pca_coords = pca.fit_transform(corpus_vectors.toarray())
     df_corpus["pca_x"] = pca_coords[:, 0]
     df_corpus["pca_y"] = pca_coords[:, 1]
     
-    # 4. Supervised Fit / Shortlisting Predictor (Model B)
-    # Feature inputs: [Jaccard Overlap, Cosine Similarity, Length Delta]
+    # 4. Supervised Fit / Shortlisting Model (Model B)
     np.random.seed(42)
     synth_X, synth_y = [], []
     for _ in range(250):
-        jaccard = np.random.uniform(0.05, 0.70)
+        jaccard = np.random.uniform(0.05, 0.75)
         cos_sim = np.random.uniform(0.10, 0.85)
         len_diff = np.random.randint(10, 200)
-        # Ground truth rule: higher similarity and overlap predict interview shortlisting
-        shortlisted = 1 if (cos_sim > 0.38 and jaccard > 0.18) else 0
+        shortlisted = 1 if (cos_sim > 0.35 and jaccard > 0.16) else 0
         synth_X.append([jaccard, cos_sim, len_diff])
         synth_y.append(shortlisted)
         
@@ -184,66 +239,73 @@ def build_engine():
 classifier, vec_clf, df_corpus, vec_rec, corpus_vectors, kmeans, pca, fit_predictor = build_engine()
 
 # =========================================================
-# 3. FEATURE EXTRACTION & GAP COMPUTATION
+# 4. SKILL RADAR MATRIX & AUDIT LOGIC
 # =========================================================
+def calculate_radar_scores(text: str):
+    """Calculates coverage scores across skill dimensions."""
+    text_lower = text.lower()
+    scores = {}
+    for dim, skill_list in SKILL_DIMENSIONS.items():
+        found = sum(1 for s in skill_list if re.search(r"\b" + re.escape(s) + r"\b", text_lower))
+        scores[dim] = min((found / max(len(skill_list) // 2, 1)) * 100, 100)
+    return scores
+
 def analyze_skill_gap(candidate_text: str, target_skills_str: str):
-    """Computes exact lexical matching and missing competencies."""
     cand_lower = candidate_text.lower()
-    found_skills = {s.title() for s in TECHNICAL_LEXICON if re.search(r"\b" + re.escape(s) + r"\b", cand_lower)}
-    
+    found_skills = {s.title() for s in FLAT_LEXICON if re.search(r"\b" + re.escape(s) + r"\b", cand_lower)}
     req_skills = {s.strip().title() for s in target_skills_str.split(",") if s.strip()}
-    
     matched = sorted(list(req_skills.intersection(found_skills)))
     missing = sorted(list(req_skills - found_skills))
-    return matched, missing, sorted(list(found_skills))
+    return matched, missing
 
 def calculate_fit_score(resume_clean: str, job_clean: str, job_vec, candidate_vec):
-    """Calculates Model B feature vector and shortlisting probability."""
     r_words = set(resume_clean.split())
     j_words = set(job_clean.split())
-    
     jaccard = len(r_words.intersection(j_words)) / max(len(r_words.union(j_words)), 1)
     cos_sim = float(cosine_similarity(candidate_vec, job_vec)[0][0])
     len_diff = abs(len(r_words) - len(j_words))
-    
     prob = fit_predictor.predict_proba([[jaccard, cos_sim, len_diff]])[0][1]
     return round(prob * 100, 1), round(cos_sim * 100, 1)
 
 # =========================================================
-# 4. SIDEBAR CONTROLS & RESUME UPLOAD
+# 5. SIDEBAR CONFIGURATION
 # =========================================================
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/artificial-intelligence.png", width=64)
-    st.title("SmartHire Pro")
-    st.caption("Classical ML-Powered Matching & Shortlisting Engine")
+    st.markdown("<h2 style='color: #881337; margin-bottom: 0;'>🌸 SmartHire Pro</h2>", unsafe_allow_html=True)
+    st.caption("Cream & Rose AI Recruitment Workspace")
     st.markdown("---")
     
-    uploaded_file = st.file_uploader("📂 Upload Candidate CV", type=["pdf", "docx", "txt"])
+    uploaded_file = st.file_uploader("📂 Upload Candidate Resume", type=["pdf", "docx", "txt"])
     
-    st.markdown("### 🎛️ Matching Filters")
+    st.markdown("### 🎛️ Matching Engine Tuning")
+    skill_weight = st.slider("Skill Overlap Priority", min_value=0.2, max_value=1.0, value=0.6, step=0.1)
+    
     selected_locations = st.multiselect(
-        "Preferred Locations", 
+        "Location Filters", 
         options=sorted(df_corpus["location"].unique()), 
         default=sorted(df_corpus["location"].unique())
     )
-    top_k = st.slider("Max Job Recommendations", min_value=3, max_value=8, value=5)
+    max_results = st.slider("Top Recommendations Count", min_value=3, max_value=8, value=5)
+    
     st.markdown("---")
-    st.caption("⚡ Model A: TF-IDF + Logistic Regression\n\n🔍 Unsupervised: Cosine Vector Space\n\n📊 Clustering: K-Means & PCA\n\n🎯 Model B: Fit Predictor (Random Forest)")
+    st.caption("✨ Pipeline: TF-IDF Vectorization • Logistic Regression Classifier • Cosine Distance • Random Forest Fit Engine")
 
 # =========================================================
-# 5. DASHBOARD MAIN VIEW
+# 6. MAIN WORKSPACE
 # =========================================================
-st.title("🚀 SmartHire: Resume Intelligence & Shortlisting Portal")
-st.markdown("Automated candidate domain classification, Top-N role retrieval, and predictive hiring analysis without generative AI.")
+st.markdown("""
+<div class="main-header">
+    <h1>SmartHire: Talent Intelligence & Match Portal</h1>
+    <p>Predictive resume classification, Top-N role matching, and skill gap audits built entirely with classical machine learning.</p>
+</div>
+""", unsafe_allow_html=True)
 
 if uploaded_file is None:
-    st.info("👋 Upload a resume in PDF, DOCX, or TXT format using the sidebar to begin analysis.")
-    
-    # Preview current job database
-    st.markdown("### 📋 Active Openings in System Database")
+    st.info("👋 Upload a resume in PDF, DOCX, or TXT format via the sidebar to initiate analysis.")
+    st.markdown("### 📋 Active Openings Catalog")
     st.dataframe(
-        df_corpus[["title", "company", "location", "exp", "skills"]].rename(
-            columns={"title": "Role Title", "company": "Company", "location": "Location", "exp": "Experience", "skills": "Key Skills"}
+        df_corpus[["title", "company", "location", "exp", "skills", "base_salary"]].rename(
+            columns={"title": "Role Title", "company": "Company", "location": "Location", "exp": "Experience", "skills": "Required Stack", "base_salary": "Salary Band"}
         ),
         use_container_width=True
     )
@@ -252,54 +314,54 @@ else:
     cleaned_resume = clean_text(raw_resume)
     
     if not cleaned_resume.strip():
-        st.error("Could not extract readable text from the file. Please check file formatting.")
+        st.error("Unable to extract text from the uploaded file. Please confirm the document is not an image-only scan.")
     else:
-        # Compute Resume Vectors
+        # Compute Vectors
         res_clf_vec = vec_clf.transform([cleaned_resume])
         res_rec_vec = vec_rec.transform([cleaned_resume])
         
-        # 1. Classification
+        # Supervised Classification (Model A)
         pred_category = classifier.predict(res_clf_vec)[0]
-        cat_probs = classifier.predict_proba(res_clf_vec)[0]
-        confidence = float(max(cat_probs)) * 100
+        confidence = float(max(classifier.predict_proba(res_clf_vec)[0])) * 100
         
-        # 2. Recommender & Shortlisting
+        # Unsupervised Recommender Engine
         sim_scores = cosine_similarity(res_rec_vec, corpus_vectors)[0]
         
-        # Filter by selected locations
+        # Filter indices by chosen location
         filtered_indices = df_corpus[df_corpus["location"].isin(selected_locations)].index
-        ranked_indices = [idx for idx in sim_scores.argsort()[::-1] if idx in filtered_indices][:top_k]
+        ranked_indices = [idx for idx in sim_scores.argsort()[::-1] if idx in filtered_indices][:max_results]
         
-        # Header Metrics Banner
-        m1, m2, m3, m4 = st.columns(4)
-        with m1:
-            st.metric("Identified Domain", pred_category)
-        with m2:
+        # Summary Metrics Header
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            st.metric("Predicted Domain", pred_category)
+        with c2:
             st.metric("Model A Confidence", f"{confidence:.1f}%")
-        with m3:
-            top_match_pct = round(sim_scores[ranked_indices[0]] * 100, 1) if ranked_indices else 0
-            st.metric("Top Role Match", f"{top_match_pct}%")
-        with m4:
-            st.metric("Active Postings Scanned", f"{len(df_corpus)}")
+        with c3:
+            top_match = round(sim_scores[ranked_indices[0]] * 100, 1) if ranked_indices else 0
+            st.metric("Top Role Match", f"{top_match}%")
+        with c4:
+            st.metric("Corpus Postings", f"{len(df_corpus)}")
             
-        st.markdown("---")
+        st.write("")
         
-        # Tabs Layout
-        tab_rec, tab_gap, tab_cluster, tab_cv = st.tabs([
-            "🎯 Top Job Recommendations", 
-            "📈 Skill Gap & Mentorship", 
-            "🌐 K-Means & PCA Visualizer", 
-            "📄 Candidate Text Extraction"
+        # Tabbed Panes
+        tab_rec, tab_radar, tab_gap, tab_cluster, tab_cv = st.tabs([
+            "🎯 Top Role Matches",
+            "📊 Skill Radar Matrix", 
+            "📈 Skill Gap & Mentorship",
+            "🌐 PCA Vector Clustering", 
+            "📄 Parsed Content"
         ])
         
         # =========================================================
-        # TAB 1: RECOMMENDATIONS & SHORTLISTING PREDICTOR
+        # TAB 1: RECOMMENDATIONS & MODEL B SHORTLISTING
         # =========================================================
         with tab_rec:
-            st.subheader("Ranked Job Openings & Predictive Fit Evaluation")
+            st.subheader("Ranked Role Matches & Estimated Shortlisting Odds")
             
             if not ranked_indices:
-                st.warning("No openings match your current location filters. Adjust filters in the sidebar.")
+                st.warning("No listings match your selected location filters.")
             else:
                 for rank, idx in enumerate(ranked_indices):
                     job = df_corpus.iloc[idx]
@@ -307,123 +369,160 @@ else:
                     
                     fit_score, match_score = calculate_fit_score(cleaned_resume, job["clean_text"], job_vec, res_rec_vec)
                     
-                    badge_color = "🟢 High Probability" if fit_score >= 60 else ("🟡 Moderate" if fit_score >= 35 else "🔴 Low Probability")
-                    
                     with st.expander(f"#{rank+1}: {job['title']} — {job['company']} (Match: {match_score}%)", expanded=(rank==0)):
-                        c_left, c_right = st.columns([2, 1])
-                        with c_left:
-                            st.markdown(f"📍 **Location:** `{job['location']}` | ⏳ **Experience Required:** `{job['exp']}`")
-                            st.markdown(f"💼 **Domain Family:** `{job['domain']}`")
-                            st.markdown(f"🛠️ **Mandatory Skills:** `{job['skills']}`")
-                            st.write(f"📝 **Role Overview:** {job['desc']}")
-                        with c_right:
-                            st.markdown("##### Model B Fit Evaluation")
-                            st.metric("Shortlist Probability", f"{fit_score}%")
+                        col_l, col_r = st.columns([2, 1])
+                        with col_l:
+                            st.markdown(f"📍 **Location:** `{job['location']}` | ⏳ **Experience:** `{job['exp']}`")
+                            st.markdown(f"💰 **Estimated Salary Band:** `{job['base_salary']}`")
+                            st.markdown(f"🛠️ **Target Skills:** `{job['skills']}`")
+                            st.write(f"📝 **Overview:** {job['desc']}")
+                        with col_r:
+                            st.markdown("##### Model B Fit Prediction")
+                            st.metric("Shortlisting Probability", f"{fit_score}%")
                             st.progress(fit_score / 100.0)
-                            st.caption(f"Estimated Outcome: **{badge_color}**")
+                            status_text = "🟢 Strong Candidate" if fit_score >= 60 else ("🟡 Competitive" if fit_score >= 35 else "🔴 Significant Gaps")
+                            st.caption(f"Screening Status: **{status_text}**")
                             
         # =========================================================
-        # TAB 2: SKILL GAP REPORT & MENTORSHIP
+        # TAB 2: SKILL RADAR MATRIX
+        # =========================================================
+        with tab_radar:
+            st.subheader("Competency Distribution Across Key Domains")
+            st.caption("Aggregated technical presence across six core engineering dimensions.")
+            
+            radar_data = calculate_radar_scores(raw_resume)
+            categories = list(radar_data.keys())
+            values = list(radar_data.values())
+            values += values[:1] # close polygon
+            angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
+            angles += angles[:1]
+            
+            # Matplotlib styling with cream & blush-pink palette
+            fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
+            fig.patch.set_facecolor('#FAF6F0')
+            ax.set_facecolor('#FFF9F3')
+            
+            ax.plot(angles, values, color='#BE123C', linewidth=2.5, linestyle='solid')
+            ax.fill(angles, values, color='#FDA4AF', alpha=0.45)
+            
+            ax.set_theta_offset(np.pi / 2)
+            ax.set_theta_direction(-1)
+            ax.set_thetagrids(np.degrees(angles[:-1]), categories, color='#881337', fontsize=10, weight='bold')
+            ax.set_ylim(0, 100)
+            ax.grid(color='#FBCFE8', linestyle='--')
+            
+            col_chart, col_data = st.columns([3, 2])
+            with col_chart:
+                st.pyplot(fig)
+            with col_data:
+                st.markdown("#### Dimension Breakdown")
+                for dim, score in radar_data.items():
+                    st.write(f"**{dim}:** `{score:.0f}% Coverage`")
+                    st.progress(score / 100.0)
+
+        # =========================================================
+        # TAB 3: SKILL GAP & ACTIONABLE REPORT
         # =========================================================
         with tab_gap:
-            st.subheader("Skill Gap Audit & Career Growth Recommendations")
-            
+            st.subheader("Target Skill Gap & Personalized Upskilling Report")
             benchmark_job = df_corpus.iloc[ranked_indices[0]] if ranked_indices else df_corpus.iloc[0]
-            st.markdown(f"Targeting Benchmark: **{benchmark_job['title']}** at **{benchmark_job['company']}**")
+            st.markdown(f"Benchmark Role: **{benchmark_job['title']}** at **{benchmark_job['company']}**")
             
-            matched, missing, candidate_all = analyze_skill_gap(raw_resume, benchmark_job["skills"])
+            matched, missing = analyze_skill_gap(raw_resume, benchmark_job["skills"])
             
-            col_g1, col_g2 = st.columns(2)
-            with col_g1:
-                st.markdown("#### ✅ Validated Competencies")
+            cg1, cg2 = st.columns(2)
+            with cg1:
+                st.markdown("#### ✅ Detected Competencies")
                 if matched:
-                    badges = "".join([f'<span class="skill-badge-found">✓ {s}</span>' for s in matched])
+                    badges = "".join([f'<span class="badge-matched">✓ {s}</span>' for s in matched])
                     st.markdown(badges, unsafe_allow_html=True)
                 else:
-                    st.warning("No explicit target skills detected in resume.")
-                    
-            with col_g2:
+                    st.warning("No explicit target competencies detected in CV.")
+            with cg2:
                 st.markdown("#### ⚠️ High-Priority Skill Deficits")
                 if missing:
-                    badges = "".join([f'<span class="skill-badge-missing">✗ {s}</span>' for s in missing])
+                    badges = "".join([f'<span class="badge-missing">✗ {s}</span>' for s in missing])
                     st.markdown(badges, unsafe_allow_html=True)
                 else:
-                    st.success("🎉 Comprehensive alignment! Your resume covers all required skills.")
+                    st.success("🎉 Perfect match! Your profile addresses all core requirements.")
                     
             st.markdown("---")
-            st.markdown("#### 💡 Rule-Based Career Guidance")
+            st.markdown("#### 💡 Targeted Career Growth Action Plan")
             if missing:
-                st.write(
-                    f"To optimize your profile for **{benchmark_job['title']}**, focus on hands-on project implementations demonstrating proficiency in: **{', '.join(missing)}**."
-                )
+                st.write(f"To optimize interview shortlisting for **{benchmark_job['title']}**, focus on developing verified projects in: **{', '.join(missing)}**.")
             else:
-                st.write("Your technical qualifications show strong role coverage. Highlight quantifiable performance outcomes and project impacts in your resume.")
+                st.write("Your technical profile demonstrates comprehensive skill coverage. Emphasize quantifiable performance improvements, latency drops, or business metrics in your project descriptions.")
                 
-            # Audit Report Download
-            report_text = f"""SMARTHIRE CANDIDATE AUDIT REPORT
-=====================================
-Predicted Role: {pred_category} (Confidence: {confidence:.1f}%)
-Benchmark Job: {benchmark_job['title']} - {benchmark_job['company']}
+            report_text = f"""SMARTHIRE CANDIDATE AUDIT & CAREER GAP REPORT
+===================================================
+Predicted Domain: {pred_category} (Confidence: {confidence:.1f}%)
+Benchmark Role: {benchmark_job['title']} ({benchmark_job['company']})
 Match Score: {round(sim_scores[benchmark_job.name]*100, 1)}%
+Estimated Salary Band: {benchmark_job['base_salary']}
 
-VALIDATED SKILLS:
-{', '.join(matched) if matched else 'None identified'}
+MATCHED SKILLS:
+{', '.join(matched) if matched else 'None'}
 
-MISSING SKILLS TO ACQUIRE:
-{', '.join(missing) if missing else 'None! Profile matches role criteria.'}
-=====================================
+RECOMMENDED SKILLS TO LEARN:
+{', '.join(missing) if missing else 'None! Profile fulfills role criteria.'}
+===================================================
+Generated with SmartHire Classical ML Engine.
 """
             st.download_button(
-                label="📥 Download Skill-Gap Audit (TXT)",
+                label="📥 Download Audit Report (TXT)",
                 data=report_text,
-                file_name="SmartHire_Skill_Report.txt",
+                file_name="SmartHire_Audit_Report.txt",
                 mime="text/plain"
             )
 
         # =========================================================
-        # TAB 3: K-MEANS & PCA CLUSTERING
+        # TAB 4: K-MEANS & PCA 2D PROJECTION
         # =========================================================
         with tab_cluster:
-            st.subheader("Unsupervised Role Clustering & Candidate Vector Projection")
-            st.caption("Visualizing 2D PCA projection of TF-IDF vectors across job postings, highlighting your resume's spatial position.")
+            st.subheader("Job Space Embedding & Candidate Vector Projection")
+            st.caption("2D PCA projection of TF-IDF vectors illustrating the spatial distribution of roles and your resume.")
             
-            # Project candidate resume onto PCA coordinate space
             cand_pca = pca.transform(res_rec_vec.toarray())
             
-            fig, ax = plt.subplots(figsize=(9, 5))
+            fig_pca, ax_pca = plt.subplots(figsize=(9, 5))
+            fig_pca.patch.set_facecolor('#FAF6F0')
+            ax_pca.set_facecolor('#FFF9F3')
+            
+            # Palette matching cream & rose
+            palette = ["#FB7185", "#F43F5E", "#E11D48", "#BE123C", "#9F1239"]
             sns.scatterplot(
                 data=df_corpus, 
                 x="pca_x", 
                 y="pca_y", 
                 hue="domain", 
-                style="domain", 
+                palette=palette[:len(df_corpus["domain"].unique())],
                 s=120, 
-                alpha=0.85, 
-                ax=ax
+                alpha=0.9, 
+                ax=ax_pca
             )
             
-            # Mark candidate location
-            ax.scatter(
+            # Project candidate marker
+            ax_pca.scatter(
                 cand_pca[0, 0], 
                 cand_pca[0, 1], 
-                color="red", 
+                color="#881337", 
                 s=280, 
                 marker="*", 
-                edgecolors="black", 
-                linewidth=1.5, 
+                edgecolors="#FFFFFF", 
+                linewidth=1.8, 
                 label="⭐ Your Resume Position"
             )
             
-            ax.set_title("Job Space Embedding (PCA Dimensions)", fontsize=13)
-            ax.set_xlabel("Principal Component 1")
-            ax.set_ylabel("Principal Component 2")
-            ax.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
+            ax_pca.set_title("PCA Projection of Postings vs. Candidate Profile", color="#881337", fontsize=12, weight="bold")
+            ax_pca.set_xlabel("Principal Component 1", color="#881337")
+            ax_pca.set_ylabel("Principal Component 2", color="#881337")
+            ax_pca.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
             plt.tight_layout()
-            st.pyplot(fig)
+            st.pyplot(fig_pca)
 
         # =========================================================
-        # TAB 4: EXTRACTED TEXT
+        # TAB 5: PARSED CONTENT
         # =========================================================
         with tab_cv:
-            st.subheader("Normalized Resume Text")
-            st.text_area("Extracted Stream Preview", raw_resume, height=350)
+            st.subheader("Extracted Document Text")
+            st.text_area("Normalized Stream Preview", raw_resume, height=350)
