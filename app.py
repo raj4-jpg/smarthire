@@ -163,7 +163,35 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+/* Adaptive banner: dark text on light theme, light text on dark theme */
+.theme-adaptive-banner {
+    background-color: var(--secondary-background-color, #FFF0F3);
+    color: var(--text-color, #2D2424);
+    border: 1px solid #FBCFE8;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
 
+/* When the user's system or Streamlit is in Dark Mode */
+@media (prefers-color-scheme: dark) {
+    .theme-adaptive-banner {
+        background-color: #1F2937 !important;
+        color: #F9FAFB !important;
+        border-color: #374151 !important;
+    }
+}
+
+/* When the user's system or Streamlit is in Light Mode */
+@media (prefers-color-scheme: light) {
+    .theme-adaptive-banner {
+        background-color: #FFF0F3 !important;
+        color: #881337 !important;
+        border-color: #FBCFE8 !important;
+    }
+}
 # =========================================================
 # 2. TEXT PROCESSING & FILE EXTRACTOR
 # =========================================================
