@@ -33,7 +33,7 @@ st.markdown("""
         font-family: 'Inter', -apple-system, sans-serif;
     }
     
-    /* General Text Color */
+    /* Enforce Dark Readable Text on Cream Canvas */
     h1, h2, h3, h4, h5, h6, p, label {
         color: #2D2424;
     }
@@ -59,22 +59,55 @@ st.markdown("""
         font-size: 1.05rem !important;
     }
 
-    /* FIX 1: Alert / Info Boxes -> Crisp White Font */
-    div[data-testid="stAlert"] {
-        background-color: #1E293B !important;
-        color: #FFFFFF !important;
-        border: 1px solid #334155 !important;
-        border-radius: 12px !important;
-    }
-    div[data-testid="stAlert"] p,
-    div[data-testid="stAlert"] span,
-    div[data-testid="stAlert"] div {
-        color: #FFFFFF !important;
-        font-weight: 500 !important;
-        font-size: 1rem !important;
+    /* DYNAMIC ADAPTIVE BANNER: Dark in light theme, Light in dark theme */
+    .theme-adaptive-banner {
+        border-radius: 12px;
+        padding: 14px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        transition: all 0.2s ease-in-out;
     }
 
-    /* FIX 2: File Uploader Box & Inner Text -> White Font */
+    /* When user's system/browser is Light Mode */
+    @media (prefers-color-scheme: light) {
+        .theme-adaptive-banner {
+            background-color: #FFE4E8 !important;
+            color: #881337 !important;
+            border: 1px solid #FBCFE8 !important;
+        }
+        div[data-testid="stAlert"] {
+            background-color: #FFE4E8 !important;
+            border: 1px solid #FBCFE8 !important;
+        }
+        div[data-testid="stAlert"] p,
+        div[data-testid="stAlert"] span,
+        div[data-testid="stAlert"] div {
+            color: #881337 !important;
+            font-weight: 600 !important;
+        }
+    }
+
+    /* When user's system/browser is Dark Mode */
+    @media (prefers-color-scheme: dark) {
+        .theme-adaptive-banner {
+            background-color: #1E293B !important;
+            color: #F8FAFC !important;
+            border: 1px solid #334155 !important;
+        }
+        div[data-testid="stAlert"] {
+            background-color: #1E293B !important;
+            border: 1px solid #334155 !important;
+        }
+        div[data-testid="stAlert"] p,
+        div[data-testid="stAlert"] span,
+        div[data-testid="stAlert"] div {
+            color: #FFFFFF !important;
+            font-weight: 500 !important;
+        }
+    }
+
+    /* File Uploader Dropzone: High-Contrast Crisp White Text */
     section[data-testid="stFileUploadDropzone"] {
         background-color: #262626 !important;
         border: 1px dashed #F472B6 !important;
@@ -106,9 +139,12 @@ st.markdown("""
         color: #881337 !important;
         font-weight: 700 !important;
     }
-    section[data-testid="stSidebar"] label {
-        color: #881337 !important;
-        font-weight: 600 !important;
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span, 
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] div {
+        color: #4A1D24 !important;
+        font-weight: 600;
     }
 
     /* Metric Cards */
@@ -163,35 +199,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-/* Adaptive banner: dark text on light theme, light text on dark theme */
-.theme-adaptive-banner {
-    background-color: var(--secondary-background-color, #FFF0F3);
-    color: var(--text-color, #2D2424);
-    border: 1px solid #FBCFE8;
-    border-radius: 12px;
-    padding: 14px 20px;
-    font-size: 1rem;
-    font-weight: 500;
-    margin-bottom: 20px;
-}
 
-/* When the user's system or Streamlit is in Dark Mode */
-@media (prefers-color-scheme: dark) {
-    .theme-adaptive-banner {
-        background-color: #1F2937 !important;
-        color: #F9FAFB !important;
-        border-color: #374151 !important;
-    }
-}
-
-/* When the user's system or Streamlit is in Light Mode */
-@media (prefers-color-scheme: light) {
-    .theme-adaptive-banner {
-        background-color: #FFF0F3 !important;
-        color: #881337 !important;
-        border-color: #FBCFE8 !important;
-    }
-}
 # =========================================================
 # 2. TEXT PROCESSING & FILE EXTRACTOR
 # =========================================================
@@ -376,7 +384,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if uploaded_file is None:
-    st.info("👋 Upload a resume in PDF, DOCX, or TXT format via the sidebar to initiate analysis.")
+    st.markdown("""
+    <div class="theme-adaptive-banner">
+        👋 Upload a resume in PDF, DOCX, or TXT format via the sidebar to initiate analysis.
+    </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("### 📋 Active Openings Catalog")
     st.dataframe(
         df_corpus[["title", "company", "location", "exp", "skills", "base_salary"]].rename(
