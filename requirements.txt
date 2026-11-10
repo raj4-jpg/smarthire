@@ -4,3 +4,5 @@ numpy
 scikit-learn
 pypdf
 python-docx
+matplotlib
+seaborn
