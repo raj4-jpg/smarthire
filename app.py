@@ -33,8 +33,8 @@ st.markdown("""
         font-family: 'Inter', -apple-system, sans-serif;
     }
     
-    /* Enforce Dark Readable Text Everywhere */
-    h1, h2, h3, h4, h5, h6, p, span, label, div {
+    /* General Text Color */
+    h1, h2, h3, h4, h5, h6, p, label {
         color: #2D2424;
     }
 
@@ -59,17 +59,46 @@ st.markdown("""
         font-size: 1.05rem !important;
     }
 
-    /* Sidebar Styles & Contrast */
+    /* FIX 1: Alert / Info Boxes -> Crisp White Font */
+    div[data-testid="stAlert"] {
+        background-color: #1E293B !important;
+        color: #FFFFFF !important;
+        border: 1px solid #334155 !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stAlert"] p,
+    div[data-testid="stAlert"] span,
+    div[data-testid="stAlert"] div {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
+        font-size: 1rem !important;
+    }
+
+    /* FIX 2: File Uploader Box & Inner Text -> White Font */
+    section[data-testid="stFileUploadDropzone"] {
+        background-color: #262626 !important;
+        border: 1px dashed #F472B6 !important;
+        border-radius: 12px !important;
+    }
+    section[data-testid="stFileUploadDropzone"] span,
+    section[data-testid="stFileUploadDropzone"] small,
+    section[data-testid="stFileUploadDropzone"] p,
+    section[data-testid="stFileUploadDropzone"] div {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
+    }
+    section[data-testid="stFileUploadDropzone"] button {
+        background-color: #FFE4E8 !important;
+        color: #881337 !important;
+        font-weight: 700 !important;
+        border: none !important;
+        border-radius: 8px !important;
+    }
+
+    /* Sidebar Background & Headers */
     section[data-testid="stSidebar"] {
         background-color: #FFF9F3 !important;
         border-right: 1px solid #FCE7F3 !important;
-    }
-    section[data-testid="stSidebar"] p, 
-    section[data-testid="stSidebar"] span, 
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] div {
-        color: #4A1D24 !important;
-        font-weight: 500;
     }
     section[data-testid="stSidebar"] h1,
     section[data-testid="stSidebar"] h2,
@@ -77,14 +106,17 @@ st.markdown("""
         color: #881337 !important;
         font-weight: 700 !important;
     }
+    section[data-testid="stSidebar"] label {
+        color: #881337 !important;
+        font-weight: 600 !important;
+    }
 
-    /* Metric & Information Cards */
+    /* Metric Cards */
     div[data-testid="stMetric"] {
         background-color: #FFFDF9 !important;
         border: 1px solid #FCE7F3 !important;
         border-radius: 14px !important;
         padding: 16px 20px !important;
-        box-shadow: 0 2px 8px rgba(244, 63, 94, 0.04) !important;
     }
     div[data-testid="stMetricLabel"] p {
         color: #9F1239 !important;
@@ -119,13 +151,11 @@ st.markdown("""
         margin: 4px !important;
     }
 
-    /* Tabs Styling */
+    /* Tabs & Expanders */
     button[data-baseweb="tab"] {
         color: #881337 !important;
         font-weight: 600 !important;
     }
-    
-    /* Expander Styling */
     .streamlit-expanderHeader {
         background-color: #FFFDF9 !important;
         color: #881337 !important;
