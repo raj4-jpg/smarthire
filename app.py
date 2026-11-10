@@ -26,93 +26,110 @@ st.set_page_config(
 # =========================================================
 st.markdown("""
 <style>
-    /* Global Background: Warm Cream */
+    /* Global Base */
     .stApp {
-        background-color: #FAF6F0;
-        color: #2D2424;
+        background-color: #FAF6F0 !important;
+        color: #2D2424 !important;
         font-family: 'Inter', -apple-system, sans-serif;
     }
     
+    /* Enforce Dark Readable Text Everywhere */
+    h1, h2, h3, h4, h5, h6, p, span, label, div {
+        color: #2D2424;
+    }
+
     /* Top Header Banner */
     .main-header {
-        background: linear-gradient(135deg, #FFE4E8 0%, #FFD1DC 50%, #FFF3EE 100%);
-        border: 1px solid #FBCFE8;
-        padding: 26px 32px;
-        border-radius: 18px;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(244, 114, 182, 0.08);
+        background: linear-gradient(135deg, #FFE4E8 0%, #FFD1DC 50%, #FFF3EE 100%) !important;
+        border: 1px solid #FBCFE8 !important;
+        padding: 26px 32px !important;
+        border-radius: 18px !important;
+        margin-bottom: 25px !important;
+        box-shadow: 0 4px 15px rgba(244, 114, 182, 0.08) !important;
     }
     .main-header h1 {
-        color: #881337;
-        margin: 0;
-        font-weight: 700;
-        font-size: 2.2rem;
+        color: #881337 !important;
+        margin: 0 !important;
+        font-weight: 700 !important;
+        font-size: 2.2rem !important;
     }
     .main-header p {
-        color: #9F1239;
-        margin-top: 6px;
-        font-size: 1.05rem;
+        color: #9F1239 !important;
+        margin-top: 6px !important;
+        font-size: 1.05rem !important;
+    }
+
+    /* Sidebar Styles & Contrast */
+    section[data-testid="stSidebar"] {
+        background-color: #FFF9F3 !important;
+        border-right: 1px solid #FCE7F3 !important;
+    }
+    section[data-testid="stSidebar"] p, 
+    section[data-testid="stSidebar"] span, 
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] div {
+        color: #4A1D24 !important;
+        font-weight: 500;
+    }
+    section[data-testid="stSidebar"] h1,
+    section[data-testid="stSidebar"] h2,
+    section[data-testid="stSidebar"] h3 {
+        color: #881337 !important;
+        font-weight: 700 !important;
     }
 
     /* Metric & Information Cards */
     div[data-testid="stMetric"] {
-        background-color: #FFFDF9;
-        border: 1px solid #FCE7F3;
-        border-radius: 14px;
-        padding: 16px 20px;
-        box-shadow: 0 2px 8px rgba(244, 63, 94, 0.04);
+        background-color: #FFFDF9 !important;
+        border: 1px solid #FCE7F3 !important;
+        border-radius: 14px !important;
+        padding: 16px 20px !important;
+        box-shadow: 0 2px 8px rgba(244, 63, 94, 0.04) !important;
     }
-    div[data-testid="stMetricLabel"] {
+    div[data-testid="stMetricLabel"] p {
         color: #9F1239 !important;
-        font-weight: 600;
+        font-weight: 600 !important;
     }
-    div[data-testid="stMetricValue"] {
+    div[data-testid="stMetricValue"] div {
         color: #4C0519 !important;
-        font-weight: 800;
+        font-weight: 800 !important;
     }
 
     /* Skill Badges */
     .badge-matched {
-        background-color: #FCE7F3;
-        color: #9D174D;
-        border: 1px solid #F472B6;
-        padding: 5px 12px;
-        border-radius: 16px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: inline-block;
-        margin: 4px;
+        background-color: #FCE7F3 !important;
+        color: #9D174D !important;
+        border: 1px solid #F472B6 !important;
+        padding: 5px 12px !important;
+        border-radius: 16px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        display: inline-block !important;
+        margin: 4px !important;
     }
     .badge-missing {
-        background-color: #FFF1F2;
-        color: #BE123C;
-        border: 1px dashed #FB7185;
-        padding: 5px 12px;
-        border-radius: 16px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: inline-block;
-        margin: 4px;
+        background-color: #FFF1F2 !important;
+        color: #BE123C !important;
+        border: 1px dashed #FB7185 !important;
+        padding: 5px 12px !important;
+        border-radius: 16px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        display: inline-block !important;
+        margin: 4px !important;
     }
 
-    /* Expander Container Styling */
-    .streamlit-expanderHeader {
-        background-color: #FFFDF9 !important;
-        border-radius: 12px !important;
+    /* Tabs Styling */
+    button[data-baseweb="tab"] {
         color: #881337 !important;
         font-weight: 600 !important;
     }
-
-    /* Sidebar Background */
-    section[data-testid="stSidebar"] {
-        background-color: #FFF9F3;
-        border-right: 1px solid #FCE7F3;
-    }
-
-    /* Tab Selected Styling */
-    button[data-baseweb="tab"] {
+    
+    /* Expander Styling */
+    .streamlit-expanderHeader {
+        background-color: #FFFDF9 !important;
         color: #881337 !important;
-        font-weight: 600;
+        font-weight: 600 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -393,11 +410,10 @@ else:
             radar_data = calculate_radar_scores(raw_resume)
             categories = list(radar_data.keys())
             values = list(radar_data.values())
-            values += values[:1] # close polygon
+            values += values[:1]
             angles = np.linspace(0, 2 * np.pi, len(categories), endpoint=False).tolist()
             angles += angles[:1]
             
-            # Matplotlib styling with cream & blush-pink palette
             fig, ax = plt.subplots(figsize=(6, 6), subplot_kw=dict(polar=True))
             fig.patch.set_facecolor('#FAF6F0')
             ax.set_facecolor('#FFF9F3')
@@ -488,7 +504,6 @@ Generated with SmartHire Classical ML Engine.
             fig_pca.patch.set_facecolor('#FAF6F0')
             ax_pca.set_facecolor('#FFF9F3')
             
-            # Palette matching cream & rose
             palette = ["#FB7185", "#F43F5E", "#E11D48", "#BE123C", "#9F1239"]
             sns.scatterplot(
                 data=df_corpus, 
@@ -501,7 +516,6 @@ Generated with SmartHire Classical ML Engine.
                 ax=ax_pca
             )
             
-            # Project candidate marker
             ax_pca.scatter(
                 cand_pca[0, 0], 
                 cand_pca[0, 1], 
